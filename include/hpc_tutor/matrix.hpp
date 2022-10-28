@@ -34,7 +34,7 @@ class Matrix {
    *
    * Constructs an empty Matrix with no elements.
    */
-  constexpr Matrix() noexcept;
+  constexpr Matrix() : dim_one_(0), dim_two_(0), container_() {}
 
   /**
    * Fill constructor.
@@ -42,7 +42,8 @@ class Matrix {
    * Constructs a matrix of size n x m.
    * Each element is default initialized.
    */
-  constexpr Matrix(size_type n, size_type m);
+  constexpr Matrix(size_type n, size_type m)
+      : dim_one_(n), dim_two_(m), container_(n * m) {}
 
   /**
    * Fill constructor.
@@ -50,7 +51,8 @@ class Matrix {
    * Constructs a matrix of size n x m.
    * Each element is a copy of val.
    */
-  constexpr Matrix(size_type n, size_type m, const value_type& val);
+  constexpr Matrix(size_type n, size_type m, const value_type& val)
+      : dim_one_(n), dim_two_(m), container_(n * m, val) {}
 
   /**
    * Copy constructor.
@@ -58,7 +60,7 @@ class Matrix {
    * Constructs a matrix with the same size as m
    * and a copy of its contents.
    */
-  constexpr Matrix(const Matrix& m);
+  constexpr Matrix(const Matrix& m) = default;
 
   /**
    * Move constructor.
@@ -66,7 +68,12 @@ class Matrix {
    * The ownership from the elements of m is moved to the constructed object.
    * The element m is left in an unspecified but valid state.
    */
-  constexpr Matrix(Matrix&& m) noexcept;
+  constexpr Matrix(Matrix&& m) noexcept {
+    dim_one_ = m.dim_one_;
+    dim_two_ = m.dim_two_;
+    container_ = std::move(m.container_);
+    m.dim_one_ = m.dim_two_ = 0;
+  }
 
   /**
    * Initializer list constructor.
@@ -85,14 +92,14 @@ class Matrix {
    * The destructors of the elements are called
    * and the used storage is deallocated.
    */
-  constexpr ~Matrix();
+  constexpr ~Matrix() = default;
 
   /**
    * Copy assignment operator.
    *
    * Resizes the matrix to match m and copies its contents.
    */
-  constexpr Matrix& operator=(const Matrix& m);
+  constexpr Matrix& operator=(const Matrix& m) = default;
 
   /**
    * Move assignment operator.
@@ -100,7 +107,12 @@ class Matrix {
    * Replaces the contents of the matrix with those of m using move semantics.
    * The element m is left in an unspecified but valid state.
    */
-  constexpr Matrix& operator=(Matrix&& m) noexcept;
+  constexpr Matrix& operator=(Matrix&& m) noexcept {
+    dim_one_ = m.dim_one_;
+    dim_two_ = m.dim_two_;
+    container_ = std::move(m.container_);
+    m.dim_one_ = m.dim_two_ = 0;
+  }
 
   /**
    * Initializer list assignment operator.
@@ -115,20 +127,25 @@ class Matrix {
   /**
    * Resizes the matrix and initializes its elements with a copy of val.
    */
-  constexpr void assign(size_type n, size_type m, const value_type& val);
+  constexpr void assign(size_type n, size_type m, const value_type& val) {
+    dim_one_ = n;
+    dim_two_ = m;
+    container_.assign(n * m, val);
+  }
 
   /**
    * Returns a reference to the ith row.
    */
-  constexpr row_reference operator[](size_type i) noexcept {
-    return &container_[i * dim_two];
+  [[nodiscard]] constexpr row_reference operator[](size_type i) noexcept {
+    return &container_[i * dim_two_];
   }
 
   /**
    * Returns a const reference to the ith row.
    */
-  constexpr const_row_reference operator[](size_type i) const noexcept {
-    return &container_[i * dim_two];
+  [[nodiscard]] constexpr const_row_reference operator[](
+      size_type i) const noexcept {
+    return &container_[i * dim_two_];
   }
 
   /**
@@ -138,7 +155,9 @@ class Matrix {
    * [data(), data() + size()) or [data(), data() + dim_one()*dim_two())
    * is valid.
    */
-  constexpr value_type* data() noexcept { return container_.data(); }
+  [[nodiscard]] constexpr value_type* data() noexcept {
+    return container_.data();
+  }
 
   /**
    * Returns a const pointer to the underlying array serving as element storage.
@@ -147,40 +166,43 @@ class Matrix {
    * [data(), data() + size()) or [data(), data() + dim_one()*dim_two())
    * is valid.
    */
-  constexpr value_type* data() const noexcept { return container_.data(); }
+  [[nodiscard]] constexpr value_type* data() const noexcept {
+    return container_.data();
+  }
 
   /**
    * Checks if the Matrix has no elements.
    */
-  [[nodiscard] constexpr empty() const noexcept {
-    return dim_one_ == 0; }
+  [[nodiscard]] constexpr bool empty() const noexcept { return dim_one_ == 0; }
 
   /**
    * Returns the total number of elements of the matrix.
    */
-  constexpr sizetype size() const noexcept {
-    return dim_one_ * dim_two_; }
+  [[nodiscard]] constexpr size_type size() const noexcept {
+    return dim_one_ * dim_two_;
+  }
 
   /**
    * Returns the number of rows of the matrix.
    */
-  constexpr sizetype dim_one() const noexcept {
-    return dim_one_; }
+  [[nodiscard]] constexpr size_type dim_one() const noexcept {
+    return dim_one_;
+  }
 
   /**
    * Returns the number of columns of the matrix.
    */
-  constexpr sizetype dim_two() const noexcept {
-    return dim_two_; }
+  [[nodiscard]] constexpr size_type dim_two() const noexcept {
+    return dim_two_;
+  }
 
  private:
   size_type dim_one_;
-  syze_type dim_two_;
+  size_type dim_two_;
   std::vector<T> container_;
 };
 
-// TODO(edsa): Write constructors, destructor, assignment operators
-// and their tests using Catch2.
+// TODO(edsa): Write comparison operator.
 
 // template <typename T>
 // constexpr auto operator<=>(const Matrix& lhs, const Matrix& rhs) noexcept;
