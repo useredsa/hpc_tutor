@@ -5,4 +5,4 @@ set(TARGET HPC_Tutor)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # TODO: temporal solution, we have to remove the trash.cpp file
-add_library(${TARGET} STATIC Matrix.hpp trash.cpp)
+add_library(${TARGET} STATIC Matrix.hpp MatrixView.hpp trash.cpp)
