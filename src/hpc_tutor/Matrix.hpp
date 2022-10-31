@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "MatrixView.hpp"
+
 namespace tutor {
 
 /**
@@ -138,6 +140,16 @@ class Matrix {
     }
 
     return *this;
+  }
+
+  /**
+   * Returns a view of the matrix.
+   * It can be used to specify a sub-matrix by using startRow and startCol
+   */
+  constexpr MatrixView<value_type> view(size_type rows, size_type cols,
+                                        size_type startRow = 0,
+                                        size_type startCol = 0) const {
+    return MatrixView<value_type>(*this, rows, cols, startRow, startCol);
   }
 
   /**
