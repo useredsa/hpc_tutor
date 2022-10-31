@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 3.10)
+add_library(hpc_tutor INTERFACE)
 
-set(TARGET HPC_Tutor)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-
-# TODO: temporal solution, we have to remove the trash.cpp file
-add_library(${TARGET} STATIC Matrix.hpp MatrixView.hpp trash.cpp)
+target_include_directories(hpc_tutor INTERFACE ../include/)
+set_target_properties(hpc_tutor PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION TRUE
+)
+target_compile_features(hpc_tutor INTERFACE cxx_std_20)
