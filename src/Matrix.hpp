@@ -101,6 +101,8 @@ class Matrix {
     columns_ = m.columns_;
     // TODO: review this
     data_ = m.data_;
+
+    return *this;
   }
 
   /**
@@ -114,6 +116,8 @@ class Matrix {
     columns_ = m.columns_;
     // TODO: review this
     data_ = std::move(m.data_);
+
+    return *this;
   }
 
   /**
@@ -130,6 +134,7 @@ class Matrix {
     for (auto& row : ill) {
       columns_ = std::max(columns_, row.size());
     }
+
     data_.resize(rows_ * columns_);
     size_type i = 0;
     for (auto& row : ill) {
@@ -140,6 +145,8 @@ class Matrix {
       }
       i++;
     }
+    
+    return *this;
   }
 
   /**
