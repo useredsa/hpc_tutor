@@ -29,12 +29,7 @@ class MatrixView {
    * Constructs an empty MatrixView without referencing any Matrix.
    */
   constexpr MatrixView() noexcept
-      : data_(nullptr),
-        rows_(0),
-        columns_(0),
-        startRow_(0),
-        startCol_(0),
-        rowStride_(0) {}
+      : data_(nullptr), rows_(0), columns_(0), rowStride_(0) {}
 
   /**
    * Fill constructor.
@@ -45,8 +40,6 @@ class MatrixView {
       : data_(m.data()),
         rows_(m.rows()),
         columns_(m.columns()),
-        startRow_(0),
-        startCol_(0),
         rowStride_(m.columns()) {}
 
   /**
@@ -54,14 +47,11 @@ class MatrixView {
    *
    * Constructs a MatrixView specifying the dimensions of the sub-matrix.
    */
-  constexpr MatrixView(Matrix<value_type>& m, size_type startRow,
-                       size_type startCol, size_type rows,
-                       size_type cols) noexcept
-      : data_(m.data()),
+  constexpr MatrixView(Matrix<value_type>& m, size_type rows, size_type cols,
+                       size_type startRow = 0, size_type startCol = 0) noexcept
+      : data_(m.data() + (m.columns() * startRow + startCol)),
         rows_(rows),
         columns_(cols),
-        startRow_(startRow),
-        startCol_(startCol),
         rowStride_(m.columns()) {}
 
   /**
@@ -95,8 +85,6 @@ class MatrixView {
     data_ = m.data();
     rows_ = m.rows();
     columns_ = m.columns();
-    startRow_ = 0;
-    startCol_ = 0;
     rowStride_ = m.columns();
     return *this;
   }
@@ -118,15 +106,11 @@ class MatrixView {
     data_ = mv.data_;
     rows_ = mv.rows_;
     columns_ = mv.columns_;
-    startRow_ = mv.startRow_;
-    startCol_ = mv.startCol_;
     rowStride_ = mv.rowStride_;
 
     mv.data_ = nullptr;
     mv.rows_ = 0;
     mv.columns_ = 0;
-    mv.startRow_ = 0;
-    mv.startCol_ = 0;
     mv.rowStride_ = 0;
     return *this;
   }
@@ -137,11 +121,9 @@ class MatrixView {
    */
   constexpr void assign(Matrix<value_type>& m, size_type startRow = 0,
                         size_type startCol = 0) noexcept {
-    data_ = m.data();
+    data_ = m.data() + (m.columns() * startRow + startCol);
     rows_ = m.rows();
     columns_ = m.columns();
-    startRow_ = startRow;
-    startCol_ = startCol;
     rowStride_ = m.columns();
   }
 
@@ -149,14 +131,14 @@ class MatrixView {
    * Returns value of the matrix at position (i, j)
    */
   [[nodiscard]] constexpr value_type& operator()(size_type i, size_type j) {
-    return data_[rowStride_ * (startRow_ + i) + (startCol_ + j)];
+    return data_[rowStride_ * i + j];
   }
 
   /**
    * Returns a reference to the ith row.
    */
   [[nodiscard]] constexpr row_reference operator[](size_type i) noexcept {
-    return &data_[rowStride_ * (startRow_ + i) + startCol_];
+    return &data_[rowStride_ * i];
   }
 
   /**
@@ -164,7 +146,7 @@ class MatrixView {
    */
   [[nodiscard]] constexpr const_row_reference operator[](
       size_type i) const noexcept {
-    return &data_[rowStride_ * (startRow_ + i) + startCol_];
+    return &data_[rowStride_ * i];
   }
 
   /**
@@ -195,8 +177,6 @@ class MatrixView {
   value_type* data_;
   size_type rows_;
   size_type columns_;
-  size_type startRow_;
-  size_type startCol_;
   size_type rowStride_;
 };
 
