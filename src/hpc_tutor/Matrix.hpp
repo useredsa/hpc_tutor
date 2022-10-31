@@ -122,6 +122,7 @@ class Matrix {
    */
   constexpr Matrix& operator=(
       std::initializer_list<std::initializer_list<value_type>> ill) {
+    // TODO: review this function (initialization and vector iterator)
     rows_ = ill.size();
     columns_ = 0;
     for (auto& row : ill) {
@@ -129,14 +130,11 @@ class Matrix {
     }
 
     data_.resize(rows_ * columns_);
-    size_type i = 0;
+    auto it = data_.begin();
     for (auto& row : ill) {
-      size_type j = 0;
       for (auto& col : row) {
-        data_[i * columns_ + j] = col;
-        j++;
+        *(it++) = col;
       }
-      i++;
     }
 
     return *this;
