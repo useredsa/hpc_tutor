@@ -1,7 +1,7 @@
 #ifndef HPC_TUTOR_MATRIXVIEW_HPP
 #define HPC_TUTOR_MATRIXVIEW_HPP
 
-#include "Matrix.hpp"
+#include "matrix.hpp"
 
 namespace tutor {
 

@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "matrix_view.hpp"
+
 namespace tutor {
 
 /**
@@ -34,7 +36,7 @@ class Matrix {
    *
    * Constructs an empty Matrix with no elements.
    */
-  constexpr Matrix() : dim_one_(0), dim_two_(0), container_() {}
+  constexpr Matrix() noexcept : rows_(0), columns_(0) {}
 
   /**
    * Fill constructor.
@@ -43,7 +45,7 @@ class Matrix {
    * Each element is default initialized.
    */
   constexpr Matrix(size_type n, size_type m)
-      : dim_one_(n), dim_two_(m), container_(n * m) {}
+      : rows_(n), columns_(m), data_(n * m) {}
 
   /**
    * Fill constructor.
@@ -52,7 +54,7 @@ class Matrix {
    * Each element is a copy of val.
    */
   constexpr Matrix(size_type n, size_type m, const value_type& val)
-      : dim_one_(n), dim_two_(m), container_(n * m, val) {}
+      : rows_(n), columns_(m), data_(n * m, val) {}
 
   /**
    * Copy constructor.
@@ -68,12 +70,7 @@ class Matrix {
    * The ownership from the elements of m is moved to the constructed object.
    * The element m is left in an unspecified but valid state.
    */
-  constexpr Matrix(Matrix&& m) noexcept {
-    dim_one_ = m.dim_one_;
-    dim_two_ = m.dim_two_;
-    container_ = std::move(m.container_);
-    m.dim_one_ = m.dim_two_ = 0;
-  }
+  constexpr Matrix(Matrix&& m) noexcept { *this = m; }
 
   /**
    * Initializer list constructor.
@@ -83,7 +80,9 @@ class Matrix {
    * the missing positions are default initialized.
    */
   constexpr Matrix(
-      std::initializer_list<std::initializer_list<value_type>> ill);
+      std::initializer_list<std::initializer_list<value_type>> ill) {
+    *this = ill;
+  }
 
   /**
    * Destructor.
@@ -108,10 +107,12 @@ class Matrix {
    * The element m is left in an unspecified but valid state.
    */
   constexpr Matrix& operator=(Matrix&& m) noexcept {
-    dim_one_ = m.dim_one_;
-    dim_two_ = m.dim_two_;
-    container_ = std::move(m.container_);
-    m.dim_one_ = m.dim_two_ = 0;
+    rows_ = m.rows_;
+    columns_ = m.columns_;
+    data_ = std::move(m.data_);
+    m.rows_ = m.columns_ = 0;
+
+    return *this;
   }
 
   /**
@@ -122,22 +123,57 @@ class Matrix {
    * the missing positions are default initialized.
    */
   constexpr Matrix& operator=(
-      std::initializer_list<std::initializer_list<value_type>> ill);
+      std::initializer_list<std::initializer_list<value_type>> ill) {
+    // TODO: review this function (initialization and vector iterator)
+    rows_ = ill.size();
+    columns_ = 0;
+    for (auto& row : ill) {
+      columns_ = std::max(columns_, row.size());
+    }
+
+    data_.resize(rows_ * columns_);
+    auto it = data_.begin();
+    for (auto& row : ill) {
+      for (auto& col : row) {
+        *(it++) = col;
+      }
+    }
+
+    return *this;
+  }
+
+  /**
+   * Returns a view of the matrix.
+   * It can be used to specify a sub-matrix by using startRow and startCol
+   */
+  constexpr MatrixView<value_type> view(size_type rows, size_type cols,
+                                        size_type startRow = 0,
+                                        size_type startCol = 0) const {
+    return MatrixView<value_type>(*this, rows, cols, startRow, startCol);
+  }
 
   /**
    * Resizes the matrix and initializes its elements with a copy of val.
    */
   constexpr void assign(size_type n, size_type m, const value_type& val) {
-    dim_one_ = n;
-    dim_two_ = m;
-    container_.assign(n * m, val);
+    rows_ = n;
+    columns_ = m;
+    data_.assign(n * m, val);
+  }
+
+  /**
+   * Returns value of the matrix at position (i, j)
+   */
+  [[nodiscard]] constexpr value_type& operator()(size_type i,
+                                                 size_type j) const {
+    return data_[i][j];
   }
 
   /**
    * Returns a reference to the ith row.
    */
   [[nodiscard]] constexpr row_reference operator[](size_type i) noexcept {
-    return &container_[i * dim_two_];
+    return &data_[i * columns_];
   }
 
   /**
@@ -145,61 +181,57 @@ class Matrix {
    */
   [[nodiscard]] constexpr const_row_reference operator[](
       size_type i) const noexcept {
-    return &container_[i * dim_two_];
+    return &data_[i * columns_];
   }
 
   /**
    * Returns a pointer to the underlying array serving as element storage.
    *
    * The pointer is such that the data in the range
-   * [data(), data() + size()) or [data(), data() + dim_one()*dim_two())
+   * [data(), data() + size()) or [data(), data() + rows()*columns())
    * is valid.
    */
-  [[nodiscard]] constexpr value_type* data() noexcept {
-    return container_.data();
-  }
+  [[nodiscard]] constexpr value_type* data() noexcept { return data_.data(); }
 
   /**
    * Returns a const pointer to the underlying array serving as element storage.
    *
    * The pointer is such that the data in the range
-   * [data(), data() + size()) or [data(), data() + dim_one()*dim_two())
+   * [data(), data() + size()) or [data(), data() + rows()*columns())
    * is valid.
    */
   [[nodiscard]] constexpr value_type* data() const noexcept {
-    return container_.data();
+    return data_.data();
   }
 
   /**
    * Checks if the Matrix has no elements.
    */
-  [[nodiscard]] constexpr bool empty() const noexcept { return dim_one_ == 0; }
+  [[nodiscard]] constexpr bool empty() const noexcept { return rows_ == 0; }
 
   /**
    * Returns the total number of elements of the matrix.
    */
   [[nodiscard]] constexpr size_type size() const noexcept {
-    return dim_one_ * dim_two_;
+    return rows_ * columns_;
   }
 
   /**
    * Returns the number of rows of the matrix.
    */
-  [[nodiscard]] constexpr size_type dim_one() const noexcept {
-    return dim_one_;
-  }
+  [[nodiscard]] constexpr size_type rows() const noexcept { return rows_; }
 
   /**
    * Returns the number of columns of the matrix.
    */
-  [[nodiscard]] constexpr size_type dim_two() const noexcept {
-    return dim_two_;
+  [[nodiscard]] constexpr size_type columns() const noexcept {
+    return columns_;
   }
 
  private:
-  size_type dim_one_;
-  size_type dim_two_;
-  std::vector<T> container_;
+  size_type rows_;
+  size_type columns_;
+  std::vector<T> data_;
 };
 
 // TODO(edsa): Write comparison operator.
