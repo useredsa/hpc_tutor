@@ -6,5 +6,10 @@ project(hpc_tutor
   LANGUAGES   CXX
 )
 
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
+
 add_subdirectory(src)
 add_subdirectory(test)
