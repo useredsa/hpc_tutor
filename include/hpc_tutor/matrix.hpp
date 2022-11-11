@@ -28,15 +28,12 @@ class Matrix {
   using row_reference = T*;
   using const_row_reference = const T*;
 
-  // TODO(edsa): Write constructors, destructor, assignment operators
-  // and their tests using Catch2.
-
   /**
    * Empty matrix constructor (default constructor).
    *
    * Constructs an empty Matrix with no elements.
    */
-  constexpr Matrix() noexcept : rows_(0), cols_(0) {}
+  constexpr Matrix() noexcept : rows_(0), cols_(0), data_() {}
 
   /**
    * Fill constructor.
@@ -70,7 +67,7 @@ class Matrix {
    * The ownership from the elements of m is moved to the constructed object.
    * The element m is left in an unspecified but valid state.
    */
-  constexpr Matrix(Matrix&& m) noexcept { *this = m; }
+  constexpr Matrix(Matrix&& m) noexcept { *this = std::move(m); }
 
   /**
    * Initializer list constructor.
@@ -93,6 +90,14 @@ class Matrix {
    */
   constexpr ~Matrix() = default;
 
+  static constexpr Matrix eye(size_t n) {
+    Matrix a(n, n);
+    for (size_t i = 0; i < n; ++i) {
+      a[i][i] = static_cast<value_type>(1);
+    }
+    return a;
+  }
+
   /**
    * Copy assignment operator.
    *
@@ -111,7 +116,6 @@ class Matrix {
     cols_ = m.cols_;
     data_ = std::move(m.data_);
     m.rows_ = m.cols_ = 0;
-
     return *this;
   }
 
@@ -127,18 +131,18 @@ class Matrix {
     // TODO: review this function (initialization and vector iterator)
     rows_ = ill.size();
     cols_ = 0;
-    for (auto& row : ill) {
+    for (const auto& row : ill) {
       cols_ = std::max(cols_, row.size());
     }
-
     data_.resize(rows_ * cols_);
-    auto it = data_.begin();
-    for (auto& row : ill) {
-      for (auto& col : row) {
-        *(it++) = col;
+    value_type* rowPtr = data_.data();
+    for (const auto& row : ill) {
+      value_type* colPtr = rowPtr;
+      for (const auto& col : row) {
+        *(colPtr++) = col;
       }
+      rowPtr += cols_;
     }
-
     return *this;
   }
 
@@ -149,8 +153,12 @@ class Matrix {
   constexpr MatrixView<value_type> view(size_type rows, size_type cols,
                                         size_type startRow = 0,
                                         size_type startCol = 0) const {
-    return MatrixView<value_type>(*this, rows, cols, startRow, startCol);
+    // TODO(edsa): throw if out-of-range.
+    return MatrixView<value_type>(&data_[startRow * cols_ + startCol], rows,
+                                  cols, cols_);
   }
+
+  constexpr MatrixView<value_type> view() const { return view(0, 0); }
 
   /**
    * Resizes the matrix and initializes its elements with a copy of val.

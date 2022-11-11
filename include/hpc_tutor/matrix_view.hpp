@@ -1,8 +1,6 @@
 #ifndef HPC_TUTOR_MATRIXVIEW_HPP
 #define HPC_TUTOR_MATRIXVIEW_HPP
 
-#include "matrix.hpp"
-
 namespace tutor {
 
 /**
@@ -24,42 +22,20 @@ class MatrixView {
   using const_row_reference = const T*;
 
   /**
-   * Empty matrix constructor (default constructor).
+   * Data Range Constructor.
    *
-   * Constructs an empty MatrixView without referencing any Matrix.
+   * Constructs a MatrixView from a pointer and a valid range.
    */
-  constexpr MatrixView() noexcept
-      : data_(nullptr), rows_(0), cols_(0), rowStride_(0) {}
-
-  /**
-   * Fill constructor.
-   *
-   * Constructs a MatrixView with same properties as original Matrix.
-   */
-  constexpr MatrixView(Matrix<value_type>& m) noexcept
-      : data_(m.data()),
-        rows_(m.rows()),
-        cols_(m.cols()),
-        rowStride_(m.cols()) {}
-
-  /**
-   * Fill constructor.
-   *
-   * Constructs a MatrixView specifying the dimensions of the sub-matrix.
-   */
-  constexpr MatrixView(Matrix<value_type>& m, size_type rows, size_type cols,
-                       size_type startRow = 0, size_type startCol = 0) noexcept
-      : data_(m.data() + (m.cols() * startRow + startCol)),
-        rows_(rows),
-        cols_(cols),
-        rowStride_(m.cols()) {}
+  constexpr MatrixView(value_type* data, size_type rows, size_type cols,
+                       size_type rowStride) noexcept
+      : data_(data), rows_(rows), cols_(cols), rowStride_(rowStride) {}
 
   /**
    * Copy constructor.
    *
    * Constructs a MatrixView with the same properties as mv.
    */
-  constexpr MatrixView(const MatrixView& mv) = default;
+  constexpr MatrixView(const MatrixView& mv) noexcept = default;
 
   /**
    * Move constructor.
@@ -67,7 +43,7 @@ class MatrixView {
    * The ownership from the elements of mv is moved to the constructed object.
    * The element mv is left in an unspecified but valid state.
    */
-  constexpr MatrixView(MatrixView&& mv) noexcept { *this = mv; }
+  constexpr MatrixView(MatrixView&& mv) noexcept = default;
 
   /**
    * Destructor.
@@ -75,19 +51,6 @@ class MatrixView {
    * Destructs the view over the Matrix, but does not delete the Matrix.
    */
   ~MatrixView() = default;
-
-  /**
-   * Fill operator.
-   *
-   * Creates a view of the original Matrix m.
-   */
-  constexpr MatrixView& operator=(const Matrix<value_type>& m) {
-    data_ = m.data();
-    rows_ = m.rows();
-    cols_ = m.cols();
-    rowStride_ = m.cols();
-    return *this;
-  }
 
   /**
    * Copy assignment operator.
@@ -102,30 +65,7 @@ class MatrixView {
    * Replaces the contents of the matrix with those of m using move semantics.
    * The element m is left in an unspecified but valid state.
    */
-  constexpr MatrixView& operator=(MatrixView&& mv) noexcept {
-    data_ = mv.data_;
-    rows_ = mv.rows_;
-    cols_ = mv.cols_;
-    rowStride_ = mv.rowStride_;
-
-    mv.data_ = nullptr;
-    mv.rows_ = 0;
-    mv.cols_ = 0;
-    mv.rowStride_ = 0;
-    return *this;
-  }
-
-  /**
-   * Assigns a new matrix to the view.
-   * A sub-matrix can be specified by providing the starting row and column.
-   */
-  constexpr void assign(Matrix<value_type>& m, size_type startRow = 0,
-                        size_type startCol = 0) noexcept {
-    data_ = m.data() + (m.cols() * startRow + startCol);
-    rows_ = m.rows();
-    cols_ = m.cols();
-    rowStride_ = m.cols();
-  }
+  constexpr MatrixView& operator=(MatrixView&& mv) noexcept = default;
 
   /**
    * Returns value of the matrix at position (i, j)
@@ -152,7 +92,9 @@ class MatrixView {
   /**
    * Checks if the Matrix has no elements.
    */
-  [[nodiscard]] constexpr bool empty() const noexcept { return rows_ == 0; }
+  [[nodiscard]] constexpr bool empty() const noexcept {
+    return rows_ == 0 || cols_ == 0;
+  }
 
   /**
    * Returns the total number of elements of the matrix.
