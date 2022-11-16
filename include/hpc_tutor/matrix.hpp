@@ -1,6 +1,7 @@
 #ifndef HPC_TUTOR_MATRIX_HPP_
 #define HPC_TUTOR_MATRIX_HPP_
 
+#include <cstddef>
 #include <vector>
 
 #include "matrix_view.hpp"
@@ -24,7 +25,7 @@ template <typename T>
 class Matrix {
  public:
   using value_type = T;
-  using size_type = std::size_t;
+  using size_type = size_t;
   using row_reference = T*;
   using const_row_reference = const T*;
 
@@ -128,7 +129,6 @@ class Matrix {
    */
   constexpr Matrix& operator=(
       std::initializer_list<std::initializer_list<value_type>> ill) {
-    // TODO: review this function (initialization and vector iterator)
     rows_ = ill.size();
     cols_ = 0;
     for (const auto& row : ill) {
@@ -148,17 +148,23 @@ class Matrix {
 
   /**
    * Returns a view of the matrix.
-   * It can be used to specify a sub-matrix by using startRow and startCol
+   * It can be used to specify a sub-matrix by using row and col
    */
-  constexpr MatrixView<value_type> view(size_type rows, size_type cols,
-                                        size_type startRow = 0,
-                                        size_type startCol = 0) const {
+  constexpr MatrixView<value_type> view(size_type row, size_type col,
+                                        size_type rows, size_type cols) {
     // TODO(edsa): throw if out-of-range.
-    return MatrixView<value_type>(&data_[startRow * cols_ + startCol], rows,
-                                  cols, cols_);
+    return MatrixView<value_type>(&data_[row * cols_ + col], rows, cols, cols_);
   }
 
-  constexpr MatrixView<value_type> view() const { return view(0, 0); }
+  /**
+   * Returns a view of the matrix.
+   * It can be used to specify a sub-matrix by using row and col
+   */
+  constexpr MatrixView<value_type> view(size_type row, size_type col) {
+    return view(row, col, rows_ - row, cols_ - col);
+  }
+
+  constexpr MatrixView<value_type> view() { return view(0, 0, rows_, cols_); }
 
   /**
    * Resizes the matrix and initializes its elements with a copy of val.

@@ -71,7 +71,7 @@ TEST_CASE("Initializer List Constructor", "[constructors]") {
   for (size_t i = 0; i < a.rows(); ++i) {
     for (size_t j = 0; j < a.cols(); ++j) {
       INFO("Failed at element a[" << i << ", " << j << "]");
-      REQUIRE(a[i][j] == i * a.cols() + j);
+      REQUIRE(a[i][j] == static_cast<int>(i * a.cols() + j));
     }
   }
   Matrix<int> b{{1}, {0, 1}, {0, 0, 1}};

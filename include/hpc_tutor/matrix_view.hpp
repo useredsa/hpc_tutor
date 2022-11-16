@@ -1,6 +1,8 @@
 #ifndef HPC_TUTOR_MATRIXVIEW_HPP
 #define HPC_TUTOR_MATRIXVIEW_HPP
 
+#include <cstddef>
+
 namespace tutor {
 
 /**
@@ -17,7 +19,7 @@ template <typename T>
 class MatrixView {
  public:
   using value_type = T;
-  using size_type = std::size_t;
+  using size_type = size_t;
   using row_reference = T*;
   using const_row_reference = const T*;
 
@@ -54,10 +56,8 @@ class MatrixView {
 
   /**
    * Copy assignment operator.
-   *
-   * Creates a copy of the MatrixView mv.
    */
-  constexpr MatrixView& operator=(const MatrixView& mv) = default;
+  constexpr MatrixView& operator=(const MatrixView& mv) noexcept = default;
 
   /**
    * Move assignment operator.
@@ -66,6 +66,23 @@ class MatrixView {
    * The element m is left in an unspecified but valid state.
    */
   constexpr MatrixView& operator=(MatrixView&& mv) noexcept = default;
+
+  /**
+   * Returns a subview of the view.
+   */
+  constexpr MatrixView<value_type> view(size_type row, size_type col,
+                                        size_type rows, size_type cols) const {
+    // TODO(edsa): throw if out-of-range.
+    return MatrixView<value_type>(data_ + (row * rowStride_ + col), rows, cols,
+                                  rowStride_);
+  }
+
+  /**
+   * Returns a subview of the view.
+   */
+  constexpr MatrixView<value_type> view(size_type row, size_type col) const {
+    return view(row, col, rows_ - row, cols_ - col);
+  }
 
   /**
    * Returns value of the matrix at position (i, j)
@@ -88,6 +105,24 @@ class MatrixView {
       size_type i) const noexcept {
     return &data_[rowStride_ * i];
   }
+
+  /**
+   * Returns a pointer to the underlying array serving as element storage.
+   *
+   * The pointer is such that the data in the range
+   * [data(), data() + size()) or [data(), data() + rows()*cols())
+   * is valid.
+   */
+  [[nodiscard]] constexpr value_type* data() noexcept { return data_; }
+
+  /**
+   * Returns a const pointer to the underlying array serving as element storage.
+   *
+   * The pointer is such that the data in the range
+   * [data(), data() + size()) or [data(), data() + rows()*cols())
+   * is valid.
+   */
+  [[nodiscard]] constexpr value_type* data() const noexcept { return data_; }
 
   /**
    * Checks if the Matrix has no elements.
