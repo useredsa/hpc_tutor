@@ -89,7 +89,7 @@ class Matrix {
    * The destructors of the elements are called
    * and the used storage is deallocated.
    */
-  constexpr ~Matrix() = default;
+  ~Matrix() = default;
 
   static constexpr Matrix eye(size_t n) {
     Matrix a(n, n);
