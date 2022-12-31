@@ -2,6 +2,8 @@
 #define HPC_TUTOR_MATRIX_HPP_
 
 #include <cstddef>
+#include <iomanip>
+#include <ostream>
 #include <vector>
 
 #include "matrix_view.hpp"
@@ -240,16 +242,40 @@ class Matrix {
    */
   [[nodiscard]] constexpr size_type cols() const noexcept { return cols_; }
 
+  friend bool operator==(const Matrix& lhs, const Matrix& rhs) noexcept {
+    return lhs.rows_ == rhs.rows_ && lhs.cols_ == rhs.cols_ &&
+           lhs.data_ == rhs.data_;
+  }
+
+  friend bool operator!=(const Matrix& lhs, const Matrix& rhs) noexcept {
+    return !(lhs == rhs);
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Matrix& m) noexcept {
+    std::vector<size_t> maxw(m.cols());
+    for (size_t i = 0; i < m.rows(); ++i) {
+      for (size_t j = 0; j < m.cols(); ++j) {
+        maxw[j] = std::max(maxw[j], std::to_string(m[i][j]).size());
+      }
+    }
+    os << '[';
+    for (size_t i = 0; i < m.rows(); ++i) {
+      if (i != 0) os << ' ';
+      for (size_t j = 0; j < m.cols(); ++j) {
+        os << std::setw(maxw[j]) << std::setfill(' ') << m[i][j];
+        if (j + 1 != m.cols()) os << ' ';
+      }
+      if (i + 1 != m.rows()) os << '\n';
+    }
+    os << ']';
+    return os;
+  }
+
  private:
   size_type rows_;
   size_type cols_;
   std::vector<T> data_;
 };
-
-// TODO(edsa): Write comparison operator.
-
-// template <typename T>
-// constexpr auto operator<=>(const Matrix& lhs, const Matrix& rhs) noexcept;
 
 }  // namespace tutor
 

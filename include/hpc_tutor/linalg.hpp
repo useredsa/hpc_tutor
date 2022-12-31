@@ -2,6 +2,7 @@
 #define HPC_TUTOR_LINALG_HPP_
 
 #include <algorithm>
+#include <vector>
 
 #include "matrix_view.hpp"
 
@@ -54,6 +55,74 @@ void VectorSum(T* ret, const T* lhs, const T* rhs, size_t n) {
 }
 
 /**
+ * Element Search in Vector.
+ */
+template <typename T>
+size_t Find(T* v, size_t n, const T& val) {
+  size_t i = 0;
+  while (i < n && v[i] != val) ++i;
+  return i;
+}
+
+/**
+ * Merge Operation.
+ *
+ * Merges two sorted vectors into a single sorted vector.
+ * The destination vector must not overlap the input vectors
+ * and must have sufficient space to store both elements.
+ */
+template <typename T>
+void Merge(T* ret, T* v, size_t vsz, T* w, size_t wsz) {
+  size_t i = 0, j = 0, k = 0;
+  while (i < vsz && j < wsz) {
+    if (v[i] < w[j]) {
+      ret[k++] = v[i++];
+    } else {
+      ret[k++] = w[j++];
+    }
+  }
+  while (i < vsz) {
+    ret[k++] = v[i++];
+  }
+  while (j < wsz) {
+    ret[k++] = w[j++];
+  }
+}
+
+namespace detail {
+
+/**
+ * Axuiliary used to implement the merge sort function.
+ */
+template <typename T>
+void MergeSort(T* v, T* aux, size_t n) {
+  if (n < 2) return;
+  size_t h = n / 2;
+  MergeSort(v, aux, h);
+  MergeSort(v + h, aux + h, n - h);
+  Merge(aux, v, h, v + h, n - h);
+  std::copy(aux, aux + n, v);
+}
+
+}  // namespace detail
+
+/**
+ * Vector (Merge)Sort.
+ *
+ * This implementation uses the mergesort algorithm.
+ * Mergesort is a divide and conquer algorithm.
+ * Recursively, you sort each half of the vector and call a merge operation
+ * with the resulting vectors.
+ * Complexity of merge is O(n).
+ * Complexity of mergesort is O(nlogn).
+ */
+template <typename T>
+void MergeSort(T* v, size_t n) {
+  std::vector<T> aux(n);
+  detail::MergeSort(v, aux.data(), n);
+}
+
+/**
  * Matrix by Vector Multiplication.
  */
 template <typename T>
@@ -97,7 +166,7 @@ void Gemm(MatrixView<T> ret, const MatrixView<T>& lhs,
 template <typename T>
 void Gemm_Block(MatrixView<T> ret, const MatrixView<T>& lhs,
                 const MatrixView<T>& rhs, size_t nbs, size_t mbs, size_t lbs) {
-  // TODO(exercise): Implement this for the first assignment.
+  // TODO(exercise): Implement this for assignment 1.
   Gemm(ret, lhs, rhs);
 }
 
@@ -127,7 +196,7 @@ void Transpose(MatrixView<T> m) {
  */
 template <typename T>
 void LuFact(MatrixView<T> m) {
-  // TODO(exercise): Implement this for the first assignment.
+  // TODO(exercise): Implement this for assignment 1.
 }
 
 /**
@@ -137,7 +206,7 @@ void LuFact(MatrixView<T> m) {
  */
 template <typename T>
 void SolveLowerIdentity(T* x, const MatrixView<T>& l, const T* b) {
-  // TODO(exercise): Implement this for the first assignment.
+  // TODO(exercise): Implement this for assignment 1.
 }
 
 /**
@@ -147,7 +216,7 @@ void SolveLowerIdentity(T* x, const MatrixView<T>& l, const T* b) {
  */
 template <typename T>
 void SolveUpper(T* x, const MatrixView<T>& u, const T* b) {
-  // TODO(exercise): Implement this for the first assignment.
+  // TODO(exercise): Implement this for assignment 1.
 }
 
 /**
@@ -159,7 +228,7 @@ void SolveUpper(T* x, const MatrixView<T>& u, const T* b) {
  */
 template <typename T>
 void LuFact_Block(MatrixView<T> m, size_t bs) {
-  // TODO(exercise): Implement this for the first assignment.
+  // TODO(exercise): Implement this for assignment 1.
 }
 
 /**
@@ -167,7 +236,7 @@ void LuFact_Block(MatrixView<T> m, size_t bs) {
  */
 template <typename T>
 void Multiply_Lu(T* ret, const MatrixView<T>& l, const MatrixView<T>& u) {
-  // TODO(exercise): Implement this for the first assignment.
+  // TODO(exercise): Implement this for assignment 1.
 }
 
 }  // namespace tutor
