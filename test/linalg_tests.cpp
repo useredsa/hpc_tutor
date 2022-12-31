@@ -8,150 +8,85 @@
 
 #include "hpc_tutor/linalg.hpp"
 #include "hpc_tutor/matrix.hpp"
-
-template <typename T>
-using Matrix = tutor::Matrix<T>;
-using Catch::Matchers::WithinAbs;
-using Catch::Matchers::WithinRel;
+#include "test_utils.hpp"
 
 TEST_CASE("GEMM by Identity", "[builtin-linalg]") {
   constexpr size_t n = 10;
   constexpr size_t m = 50;
-  std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
   auto id = Matrix<double>::eye(n);
-  Matrix<double> a(n, m);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < m; ++j) {
-      a[i][j] = rfloating(rng);
-    }
-  }
-  Matrix<double> b(n, m);
-  tutor::Gemm(b.view(), id.view(), a.view());
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < m; ++j) {
-      INFO("Failed at element b[" << i << ", " << j << "]");
-      REQUIRE_THAT(b[i][j],
-                   WithinRel(a[i][j], 1e-6) || WithinAbs(a[i][j], 1e-6));
-    }
-  }
+  auto mat = RandomMatrix<double>(n, m);
+  auto result = Matrix<double>(n, m);
+  tutor::Gemm(result.view(), id.view(), mat.view());
+  RequireEqual(result, mat);
 }
 
 TEST_CASE("GEMM", "[builtin-linalg]") {
-  Matrix<double> lhs = {{6, 1, -2}, {-3, 5, 7}};
-  Matrix<double> rhs = {{6, 6}, {1, -1}, {6, 1}};
-  Matrix<double> ret(2, 2);
-  Matrix<double> ans = {{25, 33}, {29, -16}};
+  auto lhs = Matrix<double>{{6, 1, -2}, {-3, 5, 7}};
+  auto rhs = Matrix<double>{{6, 6}, {1, -1}, {6, 1}};
+  auto ans = Matrix<double>{{25, 33}, {29, -16}};
+  auto ret = Matrix<double>(2, 2);
   Gemm(ret.view(), lhs.view(), rhs.view());
-  for (size_t i = 0; i < 2; ++i) {
-    for (size_t j = 0; j < 2; ++j) {
-      INFO("Failed at element b[" << i << ", " << j << "]");
-      REQUIRE_THAT(ret[i][j],
-                   WithinRel(ans[i][j], 1e-6) || WithinAbs(ans[i][j], 1e-6));
-    }
-  }
+  RequireEqual(ret, ans);
 }
 
 TEST_CASE("Gemm_Block", "[assignment-1]") {
   constexpr size_t n = 10;
   constexpr size_t m = 50;
-  constexpr size_t k = 20;
+  constexpr size_t l = 20;
   std::mt19937 rng(Catch::getSeed());
   auto rfloating = std::uniform_real_distribution{};
   auto id = Matrix<double>::eye(n);
-  Matrix<double> lhs(n, k);
-  Matrix<double> rhs(k, m);
-  Matrix<double> gemm(n, m);
-  Matrix<double> blck(n, m);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < k; ++j) {
-      lhs[i][j] = rfloating(rng);
-    }
-  }
-  for (size_t i = 0; i < k; ++i) {
-    for (size_t j = 0; j < m; ++j) {
-      rhs[i][j] = rfloating(rng);
-    }
-  }
-  tutor::Gemm(gemm.view(), lhs.view(), rhs.view());
+  auto lhs = RandomMatrix<double>(n, l);
+  auto rhs = RandomMatrix<double>(l, m);
+  auto truth = Matrix<double>(n, m);
+  auto result = Matrix<double>(n, m);
+  tutor::Gemm(truth.view(), lhs.view(), rhs.view());
   size_t nbs = GENERATE(2, 3, 4, 5);
   size_t mbs = GENERATE(2, 3, 4, 5, 13);
   size_t lbs = GENERATE(2, 3, 4, 5, 13);
-  tutor::Gemm_Block(blck.view(), lhs.view(), rhs.view(), nbs, mbs, lbs);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < m; ++j) {
-      INFO("Failed at element b[" << i << ", " << j << "]");
-      REQUIRE_THAT(blck[i][j],
-                   WithinRel(gemm[i][j], 1e-6) || WithinAbs(gemm[i][j], 1e-6));
-    }
-  }
+  tutor::Gemm_Block(result.view(), lhs.view(), rhs.view(), nbs, mbs, lbs);
+  INFO("Block sizes were " << nbs << " " << mbs << " " << lbs);
+  RequireEqual(result, truth);
 }
 
 TEST_CASE("LuFact", "[assignment-1]") {
   constexpr size_t n = 30;
-  std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
-  Matrix<double> m(n, n);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      m[i][j] = rfloating(rng);
-    }
-  }
-  Matrix<double> lu = m;
-  tutor::LuFact(lu.view());
-  Matrix<double> l(n, n), u(n, n), p(n, n);
+  auto m = RandomMatrix<double>(n, n);
+  auto u = m;
+  tutor::LuFact(u.view());
+  auto l = Matrix<double>(n, n);
+  auto mul = Matrix<double>(n, n);
   for (size_t i = 0; i < n; ++i) {
     for (size_t j = 0; j < i; ++j) {
-      l[i][j] = lu[i][j];
+      l[i][j] = u[i][j];
+      u[i][j] = 0;
     }
     l[i][i] = 1;
-    for (size_t j = i; j < n; ++j) {
-      u[i][j] = lu[i][j];
-    }
   }
-  tutor::Gemm(p.view(), l.view(), u.view());
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      INFO("(l*u)[" << i << ", " << j << "] != m[" << i << ", " << j << "]");
-      REQUIRE_THAT(p[i][j],
-                   WithinRel(m[i][j], 1e-6) || WithinAbs(m[i][j], 1e-6));
-    }
-  }
+  tutor::Gemm(mul.view(), l.view(), u.view());
+  INFO("LU factorization:\nL:\n" << l << "\nU:\n" << u);
+  RequireEqual(mul, m);
 }
 
 TEST_CASE("LuFact_Block", "[assignment-1]") {
   constexpr size_t n = 31;
-  std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
-  Matrix<double> m(n, n);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      m[i][j] = rfloating(rng);
-    }
-  }
-  Matrix<double> lu = m;
+  auto m = RandomMatrix<double>(n, n);
+  auto lu = m;
   tutor::LuFact(m.view());
   size_t bs = GENERATE(1, 3, 4, 16, 17, 22);
+  INFO("bs = " << bs);
   tutor::LuFact_Block(lu.view(), bs);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      INFO("Block LU fact (bs = " << bs << ") differs at " << i << ", " << j);
-      REQUIRE_THAT(lu[i][j],
-                   WithinRel(m[i][j], 1e-6) || WithinAbs(m[i][j], 1e-6));
-    }
-  }
+  RequireEqual(lu, m);
 }
 
 TEST_CASE("SolveLower and SolveUpper", "[assignment-1]") {
-  Matrix<double> m = {{6, 18, 3}, {2, 12, 1}, {4, 15, 3}};
-  std::vector<double> b = {3, 19, 0};
-  std::vector<double> ans = {-3, 3, -11};
-  std::vector<double> x(3), y(3);
+  auto m = Matrix<double>{{6, 18, 3}, {2, 12, 1}, {4, 15, 3}};
+  auto v = std::vector<double>{3, 19, 0};
+  auto truth = std::vector<double>{-3, 3, -11};
+  auto aux = std::vector<double>(3);
+  auto result = std::vector<double>(3);
   tutor::LuFact(m.view());
-  tutor::SolveLowerIdentity(y.data(), m.view(), b.data());
-  tutor::SolveUpper(x.data(), m.view(), y.data());
-  for (size_t i = 0; i < 3; ++i) {
-    INFO("x[" << i << "] != " << ans[i]);
-    REQUIRE_THAT(x[i], WithinRel(ans[i], 1e-6) || WithinAbs(ans[i], 1e-6));
-  }
+  tutor::SolveLowerIdentity(aux.data(), m.view(), v.data());
+  tutor::SolveUpper(result.data(), m.view(), aux.data());
+  RequireEqual(result, truth);
 }

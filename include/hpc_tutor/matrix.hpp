@@ -260,12 +260,11 @@ class Matrix {
     }
     os << '[';
     for (size_t i = 0; i < m.rows(); ++i) {
-      if (i != 0) os << ' ';
+      if (i != 0) os << "\n ";
       for (size_t j = 0; j < m.cols(); ++j) {
+        if (j != 0) os << ' ';
         os << std::setw(maxw[j]) << std::setfill(' ') << m[i][j];
-        if (j + 1 != m.cols()) os << ' ';
       }
-      if (i + 1 != m.rows()) os << '\n';
     }
     os << ']';
     return os;
