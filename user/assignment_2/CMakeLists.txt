@@ -1,0 +1,3 @@
+add_executable(assignment_2_tests assignment_2_tests.cpp problem_1.cpp)
+target_link_libraries(assignment_2_tests PRIVATE hpc_tutor Catch2::Catch2WithMain)
+catch_discover_tests(assignment_2_tests)
