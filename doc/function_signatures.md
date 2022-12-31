@@ -12,4 +12,7 @@ where each character that appears shows a particular thing:
 * `b`: Uses block (tiling) decomposition.
 * `t`: Uses thread-level parallelism.
 * `m`: Uses process-level parallelism via message passing.
+* `sm`: Uses syncrhonous process-level parallelism via message passing.
+* `am`: Uses asyncrhonous process-level parallelism via message passing.
+* `cm`: Uses collective process-level parallelism via message passing.
 * `g`: Uses the GPU.
