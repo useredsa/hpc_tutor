@@ -29,7 +29,7 @@ TEST_CASE("GEMM", "[builtin-linalg]") {
   RequireEqual(ret, ans);
 }
 
-TEST_CASE("Gemm_Block", "[assignment-1]") {
+TEST_CASE("Gemm_b", "[assignment-1]") {
   constexpr size_t n = 10;
   constexpr size_t m = 50;
   constexpr size_t l = 20;
@@ -44,7 +44,7 @@ TEST_CASE("Gemm_Block", "[assignment-1]") {
   size_t nbs = GENERATE(2, 3, 4, 5);
   size_t mbs = GENERATE(2, 3, 4, 5, 13);
   size_t lbs = GENERATE(2, 3, 4, 5, 13);
-  tutor::Gemm_Block(result.view(), lhs.view(), rhs.view(), nbs, mbs, lbs);
+  tutor::Gemm_b(result.view(), lhs.view(), rhs.view(), nbs, mbs, lbs);
   INFO("Block sizes were " << nbs << " " << mbs << " " << lbs);
   RequireEqual(result, truth);
 }
@@ -68,14 +68,14 @@ TEST_CASE("LuFact", "[assignment-1]") {
   RequireEqual(mul, m);
 }
 
-TEST_CASE("LuFact_Block", "[assignment-1]") {
+TEST_CASE("LuFact_b", "[assignment-1]") {
   constexpr size_t n = 31;
   auto m = RandomMatrix<double>(n, n);
   auto lu = m;
   tutor::LuFact(m.view());
   size_t bs = GENERATE(1, 3, 4, 16, 17, 22);
   INFO("bs = " << bs);
-  tutor::LuFact_Block(lu.view(), bs);
+  tutor::LuFact_b(lu.view(), bs);
   RequireEqual(lu, m);
 }
 

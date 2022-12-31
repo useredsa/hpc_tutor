@@ -76,9 +76,9 @@ TEST_CASE("Gemm Benchmark", "[gemm]") {
     tutor::Gemm(a.view(), b.view(), c.view());
     return a[0][0];
   };
-  BENCHMARK("Gemm_Block-" + std::to_string(n)) {
+  BENCHMARK("Gemm_b-" + std::to_string(n)) {
     // TODO(exercise): Select proper block sizes.
-    tutor::Gemm_Block(a.view(), b.view(), c.view(), 1, 1, 1);
+    tutor::Gemm_b(a.view(), b.view(), c.view(), 1, 1, 1);
     return a[0][0];
   };
 }
@@ -98,9 +98,9 @@ TEST_CASE("LuFact Benchmark", "[lu]") {
     tutor::LuFact(a.view());
     return a[0][0];
   };
-  BENCHMARK("LuFact_Block-" + std::to_string(n)) {
+  BENCHMARK("LuFact_b-" + std::to_string(n)) {
     // TODO(exercise): Select a proper block size.
-    tutor::LuFact_Block(acpy.view(), 1);
+    tutor::LuFact_b(acpy.view(), 1);
     return a[0][0];
   };
 }

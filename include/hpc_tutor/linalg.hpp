@@ -164,7 +164,7 @@ void Gemm(MatrixView<T> ret, const MatrixView<T>& lhs,
  * However, this function performs the decomposition in a cache friendly way.
  */
 template <typename T>
-void Gemm_Block(MatrixView<T> ret, const MatrixView<T>& lhs,
+void Gemm_b(MatrixView<T> ret, const MatrixView<T>& lhs,
                 const MatrixView<T>& rhs, size_t nbs, size_t mbs, size_t lbs) {
   // TODO(exercise): Implement this for assignment 1.
   Gemm(ret, lhs, rhs);
@@ -227,7 +227,7 @@ void SolveUpper(T* x, const MatrixView<T>& u, const T* b) {
  * However, this function performs the decomposition in a cache friendly way.
  */
 template <typename T>
-void LuFact_Block(MatrixView<T> m, size_t bs) {
+void LuFact_b(MatrixView<T> m, size_t bs) {
   // TODO(exercise): Implement this for assignment 1.
 }
 
