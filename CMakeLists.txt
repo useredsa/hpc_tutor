@@ -9,7 +9,7 @@ project(hpc_tutor
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
   set(CMAKE_CXX_EXTENSIONS OFF)
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3")
+  set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3 -march=native -mtune=native")
 endif()
 
 include(FetchContent)
