@@ -165,7 +165,7 @@ void Gemm(MatrixView<T> ret, const MatrixView<T>& lhs,
  */
 template <typename T>
 void Gemm_b(MatrixView<T> ret, const MatrixView<T>& lhs,
-                const MatrixView<T>& rhs, size_t nbs, size_t mbs, size_t lbs) {
+            const MatrixView<T>& rhs, size_t nbs, size_t mbs, size_t lbs) {
   // TODO(exercise): Implement this for assignment 1.
   Gemm(ret, lhs, rhs);
 }

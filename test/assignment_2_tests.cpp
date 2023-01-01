@@ -73,7 +73,8 @@ TEST_CASE("Gemm_t", "[assignment-2]") {
   constexpr size_t l = 200;
   auto lhs = RandomMatrix<int>(n, l, -3, 3);
   auto rhs = RandomMatrix<int>(l, m, -3, 3);
-  Matrix<int> truth(n, m), result(n, m);
+  auto truth = Matrix<int>(n, m);
+  auto result = Matrix<int>(n, m);
   tutor::Gemm(truth.view(), lhs.view(), rhs.view());
   tutor::Gemm_t(result.view(), lhs.view(), rhs.view());
   RequireEqual(result, truth);

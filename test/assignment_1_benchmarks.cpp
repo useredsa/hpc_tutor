@@ -9,29 +9,20 @@
 
 #include "hpc_tutor/linalg.hpp"
 #include "hpc_tutor/matrix.hpp"
+#include "test_utils.hpp"
 
 template <typename T>
 using Matrix = tutor::Matrix<T>;
 
 TEST_CASE("Basic LinAlg Benchmarks", "[basic-linalg]") {
-  std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
   size_t n = GENERATE(500, 1000, 2000, 3000, 4000);
-  Matrix<double> a(n, n), b(n, n), c(n, n);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      a[i][j] = rfloating(rng);
-      b[i][j] = rfloating(rng);
-      c[i][j] = rfloating(rng);
-    }
-  }
-  std::vector<double> u(n), v(n), w(n);
-  for (size_t i = 0; i < n; ++i) {
-    u[i] = rfloating(rng);
-    v[i] = rfloating(rng);
-    w[i] = rfloating(rng);
-  }
-  double scalar = rfloating(rng);
+  auto a = RandomMatrix<double>(n, n);
+  auto b = RandomMatrix<double>(n, n);
+  auto c = RandomMatrix<double>(n, n);
+  auto u = RandomVector<double>(n);
+  auto v = RandomVector<double>(n);
+  auto w = RandomVector<double>(n);
+  double scalar = RandomVector<double>(1)[0];
   BENCHMARK("VectorScalarMul-" + std::to_string(n)) {
     tutor::ScalarMul(v.data(), n, scalar);
     return u[0];
@@ -61,46 +52,32 @@ TEST_CASE("Basic LinAlg Benchmarks", "[basic-linalg]") {
 }
 
 TEST_CASE("Gemm Benchmark", "[gemm]") {
-  std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
   size_t n = GENERATE(500, 1000, 2000, 3000, 4000);
-  Matrix<double> a(n, n), b(n, n), c(n, n);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      a[i][j] = rfloating(rng);
-      b[i][j] = rfloating(rng);
-      c[i][j] = rfloating(rng);
-    }
-  }
+  auto lhs = RandomMatrix<double>(n, n);
+  auto rhs = RandomMatrix<double>(n, n);
+  auto ret = Matrix<double>(n, n);
   BENCHMARK("Gemm-" + std::to_string(n)) {
-    tutor::Gemm(a.view(), b.view(), c.view());
-    return a[0][0];
+    tutor::Gemm(ret.view(), lhs.view(), rhs.view());
+    return ret[0][0];
   };
   BENCHMARK("Gemm_b-" + std::to_string(n)) {
     // TODO(exercise): Select proper block sizes.
-    tutor::Gemm_b(a.view(), b.view(), c.view(), 1, 1, 1);
-    return a[0][0];
+    tutor::Gemm_b(ret.view(), lhs.view(), rhs.view(), 1, 1, 1);
+    return ret[0][0];
   };
 }
 
 TEST_CASE("LuFact Benchmark", "[lu]") {
-  std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
   size_t n = GENERATE(500, 1000, 2000, 3000, 4000);
-  Matrix<double> a(n, n);
-  for (size_t i = 0; i < n; ++i) {
-    for (size_t j = 0; j < n; ++j) {
-      a[i][j] = rfloating(rng);
-    }
-  }
-  Matrix<double> acpy = a;
+  auto a = RandomMatrix<double>(n, n);
+  auto b = a;
   BENCHMARK("LuFact-" + std::to_string(n)) {
     tutor::LuFact(a.view());
     return a[0][0];
   };
   BENCHMARK("LuFact_b-" + std::to_string(n)) {
-    // TODO(exercise): Select a proper block size.
-    tutor::LuFact_b(acpy.view(), 1);
+    // TODO(exercise): Select proper block sizes.
+    tutor::LuFact_b(b.view(), 1);
     return a[0][0];
   };
 }

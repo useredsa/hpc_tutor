@@ -2,7 +2,6 @@
 #include <catch2/catch_get_random_seed.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
-#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <numeric>
 #include <random>
 
@@ -34,7 +33,6 @@ TEST_CASE("Gemm_b", "[assignment-1]") {
   constexpr size_t m = 50;
   constexpr size_t l = 20;
   std::mt19937 rng(Catch::getSeed());
-  auto rfloating = std::uniform_real_distribution{};
   auto id = Matrix<double>::eye(n);
   auto lhs = RandomMatrix<double>(n, l);
   auto rhs = RandomMatrix<double>(l, m);
